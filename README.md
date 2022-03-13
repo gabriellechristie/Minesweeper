@@ -1,131 +1,179 @@
-# Minesweeper
-#include <string>
-#include <cstring>
+#pragma once
+#include <vector>
+#include <random>
 #include <SFML/Graphics.hpp>
-#include "Header.h"
 using namespace std;
 
+const static string HIDDEN_TILE_PATH = "./images/tile_hidden.png";
+const static string REVEALED_TILE_PATH = "./images/tile_revealed.png";
+const static string MINE_PATH = "./images/mine.png";
+const static string ONE_PATH = "./images/number_1.png";
+const static string TWO_PATH = "./images/number_2.png";
+const static string THREE_PATH = "./images/number_3.png";
+const static string FOUR_PATH = "./images/number_4.png";
+const static string FIVE_PATH = "./images/number_5.png";
+const static string SIX_PATH = "./images/number_6.png";
+const static string SEVEN_PATH = "./images/number_7.png";
+const static string EIGHT_PATH = "./images/number_8.png";
+const static string FLAG_PATH = "./images/flag.png";
+const static string TEST_1_PATH = "./images/test_1.png";
+const static string TEST_2_PATH = "./images/test_2.png";
+const static string TEST_3_PATH = "./images/test_3.png";
+const static string DEBUG_PATH = "./images/debug.png";
+const static string DIGITS_PATH = "./images/digits.png";
+const static string HAPPY_FACE_PATH = "./images/face_happy.png";
+const static string WIN_FACE_PATH = "./images/face_win.png";
+const static string LOSE_FACE_PATH = "./images/face_lose.png";
 
-//char* loadBuffer(string filename);
 
-//void GetBoardValues(Board& board, char* buffer);
+static const enum Texture_Type {
+
+	HIDDEN_TILE, REVEALED_TILE, MINE, ONE, TWO,
+	THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, FLAG, TEST_1,
+	TEST_2, TEST_3, DEBUG, DIGITS, HAPPY_FACE, WIN_FACE, LOSE_FACE, NONE 
+
+};
+static const char* Texture_Type_As_Str[] =
+{ "HIDDEN_TILE", "REVEALED_TILE", "MINE", "ONE", "TWO", "THREE", "FOUR", 
+"FIVE", "SIX", "SEVEN", "EIGHT", "FLAG","TEST_1","TEST_2", "TEST_3",
+"DEBUG","DIGITS","HAPPY_FACE","WIN_FACE","LOSE_FACE","NONE"};
 
 
-int main()
-{
+class RandomNumber {
+	static mt19937 randomNumber;
+public:
+	static int Number(int min, int max);
+};
 
-    Board* board = new Board;
-    board->InitBoard();
-    board->BuildBoard();    
-    
+class Tile {
+public:
+	Tile() {
+		xPosition = 0;
+		yPosition = 0;
+		adjMineCount = 0;
+		texture_type = HIDDEN_TILE;
+		bomb_overlay_type = NONE;
+		flag_overlay_type = NONE;
+		number_overlay_type = NONE;
+		overlayBombTexture = new sf::Texture;
+		overlayFlagTexture = new sf::Texture;
+		overlayNumberTexture = new sf::Texture;
+		texture.loadFromFile(HIDDEN_TILE_PATH);
+		sprite.setTexture(texture);
+		isMenu = false;
+		isMine = false;
+		isVisible = true;
+		isFlag = false;
+	};
+	~Tile() {
+		delete overlayBombTexture;
+		delete overlayFlagTexture;
+		delete overlayNumberTexture;
+	};
+	
+	void SetTexture();
 
-    sf::Texture revealedTile;
-    sf::Sprite revealedSprite;
-    if (!revealedTile.loadFromFile("./images/tile_revealed.png")) {
-        cout << "Cannot load image";
-    }
-   // bool isFound = false;  
-   
+	bool isMenu;
+	bool isMine;
+	bool isVisible;
+	bool isFlag;
 
-    sf::RenderWindow window(sf::VideoMode(board->GetWidth(), board->GetHeight()), "Minesweeper");
-    
-    /*int randomX = RandomNumber::Number(0,window.getSize().x);
-    int randomY = RandomNumber::Number(0, window.getSize().y);*/
+	//getters and setters for x and y
 
-    bool isFound = false;
+	Texture_Type texture_type;
+	Texture_Type bomb_overlay_type;
+	Texture_Type flag_overlay_type;
+	Texture_Type number_overlay_type;
+	Texture_Type prev_texture_type;
 
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            switch (event.type)
-            {
-                // window closed
-            case sf::Event::Closed: {
-                window.close();
-                break;
-            }
-                                  //left key pressed:
-            case sf::Event::MouseButtonPressed: {
+	int xBeginBounds;
+	int yBeginBounds;
+	int xEndBounds;
+	int yEndBounds;
 
-                if (event.type == sf::Event::MouseButtonPressed)
-                {
-                    if (event.mouseButton.button == sf::Mouse::Left)
-                    {
-                        int height = board->GetHeight() - 88;
-                        if (event.mouseButton.y < height) {
-                            board->ProcessedTileLeft(event.mouseButton.x, event.mouseButton.y);
-                        }
-                        else {
-                            board->ProcessedMenu(event.mouseButton.x, event.mouseButton.y);
-                        }
+	int xPosition;
+	int yPosition;
 
-                    }
-                    if (event.mouseButton.button == sf::Mouse::Right) {
-                        board->ProcessedTileRight(event.mouseButton.x, event.mouseButton.y);
-                    }
-                    break;
-                }
-              }
-            }
-        }
-    
-                
-        sf::RectangleShape rectangle;
-        rectangle.setSize(sf::Vector2f(board->GetWidth(), board->GetHeight()));
-        rectangle.setFillColor(sf::Color::White);
-        window.draw(rectangle);
+	int aboveAdj;
+	int belowAdj;
+	int rightAdjAngleTop;
+	int rightAdjMid;
+	int rightAdjAngleBot;
+	int leftAdjAngleTop;
+	int leftAdjMid;
+	int leftAdjAngleBot;
 
-        vector <Tile*> tiles = board->GetTileVector();
-        for (const auto tile : tiles) {
-            window.draw(tile->sprite);            
-            if (tile->isFlag && tile->isMine) {
-                if (tile->bomb_overlay_type == HIDDEN_TILE) {
-                    window.draw(tile->overlayBombSprite);
-                    window.draw(tile->overlayFlagSprite);
-                }
-                else {
-                    window.draw(tile->overlayFlagSprite);
-                    window.draw(tile->overlayBombSprite);
-                }
-                
-            }
-            else if (tile->isMine) {
-                window.draw(tile->overlayBombSprite);
-            }
-            else if (tile->isFlag) {
-                window.draw(tile->overlayFlagSprite);
-            }
-            else if (tile->adjMineCount > 0 && (tile->texture_type == REVEALED_TILE)) {
-                window.draw(tile->overlayNumberSprite);
-            }           
-           /* if (tile->isMine && tile->texture_type == HIDDEN_TILE) {
-                board->isWin == true;
-            }*/
-            
-        }        
+	int tileNumber;
+	int menuNumer;
+	int adjMineCount;
+	int column;
+	int row;
 
-        vector <Tile*> menuTiles = board->GetMenuVector();
-        for (const auto menuTile : menuTiles) {
-            if(menuTile->isVisible){
-                window.draw(menuTile->sprite);
-            }
-            /*if (!board->isLose) {
-                if (menuTile->texture_type == HAPPY_FACE) {
-                    window.draw(menuTile->sprite);
-                }
-            }*/
-            if (board->isLose) {
-                if (menuTile->texture_type == LOSE_FACE) {
-                    window.draw(menuTile->sprite);
-                }
-            }
-        }      
-        window.display();
-    }
-   
+	sf::Sprite sprite;
+	sf::Sprite overlayBombSprite;
+	sf::Sprite overlayFlagSprite;	
+	sf::Sprite overlayNumberSprite;
 
-    return EXIT_SUCCESS;
 
-}                 
+	sf::Texture texture;
+	sf::Texture* overlayBombTexture;
+	sf::Texture* overlayFlagTexture;
+	sf::Texture* overlayNumberTexture;
+
+};
+
+class Board {
+public:
+	Board() {};	
+	void Add(Tile* tile);
+	void InitBoard();
+	void SetBoardValues(fstream& file, string& fileData);
+	int GetWidth();
+	int GetHeight();
+	void BuildBoard();
+	void BuildBoardForTests(Texture_Type texture_type);
+	vector <Tile*> GetTileVector();
+	void ProcessedTileLeft(int x, int y);
+	void ProcessedTileRight(int x, int y);
+	void ProcessedMenu(int x, int y);
+	void ProcessTests(Texture_Type texture_type);
+	Tile* FindTile(int x, int y);
+	Tile* FindMenu(int x, int y);
+	void SetAdjacentTiles(Tile* tile);
+	void SetAdjTileAttributes(Tile* tile,int aboveAdj, int belowAdj,int rightAdjAngleTop,int rightAdjMid,int rightAdjAngleBot,	int leftAdjAngleTop,int leftAdjMid,	int leftAdjAngleBot);
+	vector <Tile*> GetMenuVector();
+	void AddMenu(Tile* tile);
+	bool isMine(Tile* tile);
+	int AdjMineCount(Tile* tile);
+	int RandomX();
+	int RandomY();
+	bool isMineClicked(Tile* tile);
+	bool isFlagClicked(Tile* tile);
+	void NumberTiles(int value, Tile* tile);
+	void ReverseMineDebug(Tile* tile);
+	void ReverseFlag(Tile* tile);
+	Tile* GetTile(int value);
+	Tile* GetMenuTile(int value);
+	void Digit(Tile* tile, int digit);
+	void UpdateDigit(Tile* tile, Tile* tile2, Tile* tile3, Tile* tile4);
+	void RevealAdjTiles(Tile* tile);
+	void ResetBoard();
+	bool isLose = false;
+	bool isWin = false;
+	bool isDebug = false;
+	
+private:
+	vector <Tile*> tiles;
+	vector <Tile*> menuTiles;
+	vector <int> boardValues;
+
+	int rowMax;
+	int columnMax;
+	int mineCount = 0;
+	int tileCount = 0;
+	int width = 0;
+	int height = 0;
+	int flagCounter = 0;
+	int revealedTileCount = 0;
+	int initRecursion = true;
+
